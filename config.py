@@ -1,8 +1,8 @@
-tesnet_wallet = 'cTZXJQhEUgoYf2PyLmQZpXFJP3ntD2DKNasodDAzSFEAva3e8yeG'
+tesnet_wallet = '_'
 
-bot_token = '5803901784:AAFqrtFt3AVfRHUdPxrjtdmPerDuqdk6n7Y'
+bot_token = '_'
 
-tg_admin_id = 724520448
+tg_admin_id = int()
 
 api_url = 'http://127.0.0.1:8000'
 
