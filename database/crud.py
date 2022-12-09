@@ -155,13 +155,3 @@ def update_user(user: pydantic_models.UserToUpdate):
         user_to_update.wallet = user.wallet
     return user_to_update
 
-
-"""
-We sent 0.0107011 bitcoins to address
-mvD9jYm1zqcpf9ghLLadjT37Q2vFni86w9
-
-tx: cf5724957e8f428356a54975fad06184df09ad601601ed61e3577da05f14232a
-Send coins back, when you don't need them anymore to the address
-
-mv4rnyY3Su5gjcDNzbMLKBQkBicCtHUtFB
-"""
