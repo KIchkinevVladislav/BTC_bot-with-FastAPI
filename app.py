@@ -13,7 +13,8 @@ api = fastapi.FastAPI()
 
 @api.put('/user/{user_id}')
 def update_user(user_id: int, user: pydantic_models.UserToUpdate = fastapi.Body()):
-    return crud.update_user(user).to_dict()
+    if user_id == user.id:
+        return crud.update_user(user).to_dict()
 
 
 @api.delete('/user/{user_id}')
@@ -23,17 +24,17 @@ def delete_user(user_id: int = fastapi.Path()):
     return True
 
 
-@api.post('/user/create/') # создание пользователя
+@api.post('/user/create')
 def create_user(user: pydantic_models.UserToCreate):
-    return crud.create_user(
-        tg_id=user.tg_ID,
-        nick=user.nick if user.nick else None).to_dict()
+    return crud.create_user(tg_id=user.tg_ID,
+                            nick=user.nick if user.nick else None).to_dict()
 
 
-@api.get('/get_info_by_user_id/{user_id:int}') # получение иформации о пользователе
+@api.get('/get_user_balance_by_id/{user_id:int}')
 @crud.db_session
-def get_info_about_user(user_id):
-    return crud.get_user_info(crud.User[user_id])
+def get_user_balance_by_id(user_id):
+    crud.update_wallet_balance(crud.User[user_id].wallet)
+    return crud.User[user_id].wallet.balance
 
 
 @api.get('/get_user_balance_by_id/{user_id:int}') # получение баланса пользователя
@@ -83,3 +84,16 @@ def create_transaction(transaction: pydantic_models.CreateTransaction = fastapi.
             fee=transaction.fee if transaction.fee else None,
             testnet=transaction.testnet
     ).to_dict()
+
+
+@api.get('/get_user_wallet/{user_id:int}')
+@crud.db_session
+def get_user_wallet(user_id):
+    return crud.get_wallet_info(crud.User[user_id].wallet)
+
+
+@api.get('/get_user_transactions/{user_id:int}')
+@crud.db_session
+def get_user_transactions(user_id: int = fastapi.Path()):
+    return crud.get_user_transactions(user_id)
+
