@@ -1,54 +1,198 @@
-import copy
-import pydantic_models
 import fastapi
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 
 import config
 from database import crud
-from database.models import *
-from database.db import *
+import pydantic_models
+from pydantic_models import Token, TokenData, Admin, UserInDB
 
 
 api = fastapi.FastAPI()
 
+SECRET_KEY = config.SECRET_KEY
+ALGORITHM = config.ALGORITHM
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def verify_password(plain_password, hashed_password):
+    """
+    Проверка соответствия полученного пароля хешу
+    """
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password):
+    """
+    Хеширование пароля от пользователя
+    """
+    return pwd_context.hash(password)
+
+
+def get_user(username: str):
+    """
+    Проверка имени пользователя на сохранное в базе данных
+    :return:
+    """
+    if username == config.username:
+        return UserInDB(username=username, hashed_password=config.password)
+
+
+def authenticate_user(username: str, password: str):
+    """
+    Проверка имени и пароля пользвателя
+    на соотвествие данным из базы
+    """
+    user = get_user(username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+
+def create_access_token(data: dict):
+    """
+    Создание нового токена доступа
+    """
+    to_encode = data.copy()
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    """
+    Создаем зависимость
+    доступ получает
+    только авторизированный пользователь
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = TokenData(username=username)
+    except JWTError:
+        raise credentials_exception
+    user = get_user(username=token_data.username)
+    if user is None:
+        raise credentials_exception
+    return user
+
+
+@api.post("/token", response_model=Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(
+        data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+"""
+current_user: Admin = Depends(get_current_user)
+используем в обработчиках пути 
+чтобы предоставить доступ только авторизованному клиенту
+"""
+
+
+@api.get("/users/me/", response_model=Admin)
+async def read_users_me(current_user: Admin = Depends(get_current_user)):
+    """
+    Возвращает пользователю данные о нём
+    :return:
+    """
+    return current_user
+
 
 @api.put('/user/{user_id}')
-def update_user(user_id: int, user: pydantic_models.UserToUpdate = fastapi.Body()):
+def update_user(
+        user_id: int,
+        user: pydantic_models.UserToUpdate = fastapi.Body(),
+        current_user: Admin = Depends(get_current_user)
+):
+    """
+    Обновляем данные пользователя
+    :param user_id:
+    :param user:
+    :return:
+    """
     if user_id == user.id:
         return crud.update_user(user).to_dict()
 
 
 @api.delete('/user/{user_id}')
 @crud.db_session
-def delete_user(user_id: int = fastapi.Path()):
+def delete_user(user_id: int = fastapi.Path(),
+                current_user: Admin = Depends(get_current_user)):
+    """
+    Удаляем пользователя
+    :param user_id:
+    :return:
+    """
     crud.get_user_by_id(user_id).delete()
     return True
 
 
 @api.post('/user/create')
-def create_user(user: pydantic_models.UserToCreate):
+def create_user(user: pydantic_models.UserToCreate,
+                current_user: Admin = Depends(get_current_user)):
+    """
+    Создаем пользователя
+    :param user:
+    :return:
+    """
     return crud.create_user(tg_id=user.tg_ID,
                             nick=user.nick if user.nick else None).to_dict()
 
 
+@api.get('/get_info_by_user_id/{user_id:int}')
+@crud.db_session
+def get_info_about_user(
+        user_id,
+        current_user: Admin = Depends(get_current_user)
+):
+    """
+    Получаем информацию о пользователе
+    :param user_id:
+    :return:
+    """
+    return crud.get_user_info(crud.User[user_id])
+
+
 @api.get('/get_user_balance_by_id/{user_id:int}')
 @crud.db_session
-def get_user_balance_by_id(user_id):
+def get_user_balance_by_id(user_id,
+                           current_user: Admin = Depends(get_current_user)):
+    """
+    Получаем баланс пользователя
+    :param user_id:
+    :return:
+    """
     crud.update_wallet_balance(crud.User[user_id].wallet)
     return crud.User[user_id].wallet.balance
-
-
-@api.get('/get_user_balance_by_id/{user_id:int}') # получение баланса пользователя
-@crud.db_session
-def get_user_balance_by_id(user_id):
-    crud.update_wallet_balance(crud.User[user_id].wallet)
-    return crud.User[user_id].wallet.balance
-
-
 
 
 @api.get('/get_total_balance')  # получение баланса всех пользователей
 @crud.db_session
-def get_total_balance():
+def get_total_balance(current_user: Admin = Depends(get_current_user)):
+    """
+    Получаем общий баланс
+    :return:
+    """
     balance = 0.0
     crud.update_all_wallets()
     for user in crud.User.select()[:]:
@@ -58,7 +202,11 @@ def get_total_balance():
 
 @api.get('/users')
 @crud.db_session
-def get_users():
+def get_users(current_user: Admin = Depends(get_current_user)):
+    """
+    Получаем всех пользователей
+    :return list:
+    """
     users = []
     for user in crud.User.select()[:]:
         users.append(user.to_dict())
@@ -67,33 +215,64 @@ def get_users():
 
 @api.get('/user_by_tg_id/{tg_id:int}')
 @crud.db_session
-def get_user_by_tg_id(tg_id):
+def get_user_by_tg_id(
+        tg_id,
+        current_user: Admin = Depends(get_current_user)
+):
+    """
+    Получаем пользователя по айди в Телеграме
+    :param tg_id:
+    :return:
+    """
     user = crud.get_user_info(crud.User.get(tg_ID=tg_id))
     return user
 
 
-
 @api.post('/create_transaction')
 @crud.db_session
-def create_transaction(transaction: pydantic_models.CreateTransaction = fastapi.Body()):
-    user = crud.User.get(tg_ID=transaction.tg_ID)
+def create_transaction(
+        user_id,
+        transaction: pydantic_models.CreateTransaction,
+        current_user: Admin = Depends(get_current_user)
+):
+    """
+    Создаем транзакцию и отправляем у.е.
+    :param user_id:
+    :param transaction:
+    :return:
+    """
     return crud.create_transaction(
-            sender=user,
-            amount_btc_without_fee=transaction.amount_btc_without_fee,
-            receiver_address=transaction.receiver_address,
-            fee=transaction.fee if transaction.fee else None,
-            testnet=transaction.testnet
-    ).to_dict()
+        crud.get_user_by_id(user_id),
+        transaction.amount_btc_without_fee,
+        transaction.receiver_address
+    )
 
 
 @api.get('/get_user_wallet/{user_id:int}')
 @crud.db_session
-def get_user_wallet(user_id):
+def get_user_wallet(
+        user_id,
+        current_user: Admin = Depends(get_current_user)
+):
+    """
+    Получаем кошелек пользователя
+    :param user_id:
+    :return:
+    """
     return crud.get_wallet_info(crud.User[user_id].wallet)
 
 
 @api.get('/get_user_transactions/{user_id:int}')
 @crud.db_session
-def get_user_transactions(user_id: int = fastapi.Path()):
+def get_user_transactions(
+        user_id,
+        current_user: Admin = Depends(get_current_user)
+):
+    """
+    Получаем тразакции пользователя
+    :param user_id:
+    :return:
+    """
     return crud.get_user_transactions(user_id)
+
 
