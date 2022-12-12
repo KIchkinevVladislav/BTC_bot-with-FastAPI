@@ -1,5 +1,4 @@
 import datetime
-import config
 import pydantic_models
 from database.db import *
 import bit
@@ -43,7 +42,7 @@ def create_transaction(
         sender: User,
         amount_btc_without_fee: float,
         receiver_address: str,
-        fee: float | None = None,
+        fee: float = None,
         testnet: bool = False
 ):
     wallet_of_sender = bit.Key(sender.wallet.private_key) if not testnet else bit.PrivateKeyTestnet(sender.wallet.private_key)
@@ -52,7 +51,7 @@ def create_transaction(
         fee = bit.network.fees.get_fee() * 1000
     amount_btc_with_fee = amount_btc_without_fee = fee
     if amount_btc_without_fee + fee > sender.wallet.balance:
-        return  f'Too low balance: {sender.wallet.balance}'
+        return f'Too low balance: {sender.wallet.balance}'
 
     output = [(receiver_address, amount_btc_without_fee, 'satoshi')]
 
@@ -69,7 +68,7 @@ def create_transaction(
         date_of_transection=datetime.now(),
         tx_hash=tx_hash
     )
-    return transaction
+    return transaction.to_dict()
 
 
 @db_session
@@ -99,7 +98,7 @@ def get_user_by_id(id: int):
 
 @db_session
 def get_user_by_tg_id(tg_id: int):
-    return User.select(lambda u: u.tg_ID == tg_id).first()
+    return User.select(lambda u: u.tg_ID == tg_id).first
 
 
 @db_session
@@ -155,3 +154,7 @@ def update_user(user: pydantic_models.UserToUpdate):
         user_to_update.wallet = user.wallet
     return user_to_update
 
+@db_session
+def get_user_transactions(user_id):
+    return list(map(lambda t: t.to_dict(),
+                    Transaction.select(lambda trans: trans.sender.id == user_id or trans.receiver.id == user_id)[:]))
