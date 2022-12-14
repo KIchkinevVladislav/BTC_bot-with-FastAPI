@@ -135,4 +135,3 @@ def get_user_transactions(user_id: int):
         return f"{response.text} \n" \
                f"Exception: {E.args, E.__traceback__}"
 
-
