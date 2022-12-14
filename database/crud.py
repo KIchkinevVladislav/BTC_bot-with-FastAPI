@@ -7,7 +7,7 @@ import bit
 @db_session
 def create_wallet(user: pydantic_models.User = None,
                   private_key: str = None,
-                  testnet: bool = False):
+                  testnet: bool = True):
     if not testnet:
         raw_wallet = bit.Key() if not private_key else bit.Key(private_key)
     else:
@@ -122,7 +122,7 @@ def get_wallet_info(wallet: pydantic_models.Wallet):
     wallet = update_wallet_balance(wallet)
     return {"id": wallet.id if wallet.id else None,
             "user": wallet.user if wallet.user else None,
-            "balance": wallet.balance if wallet.balance else None,
+            "balance": wallet.balance,
             "private_key": wallet.private_key if wallet.private_key else None,
             "address": wallet.address if wallet.address else None,
             "sended_transactions": wallet.sended_transactions if wallet.sended_transactions else [],
@@ -158,3 +158,6 @@ def update_user(user: pydantic_models.UserToUpdate):
 def get_user_transactions(user_id):
     return list(map(lambda t: t.to_dict(),
                     Transaction.select(lambda trans: trans.sender.id == user_id or trans.receiver.id == user_id)[:]))
+
+
+
