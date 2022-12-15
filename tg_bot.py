@@ -17,7 +17,6 @@ def start_message(message):
         pass
     markup = telebot.types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 
-    # создаем каждую кнопку таким образом
     btn1 = telebot.types.KeyboardButton('Кошелек')
     btn2 = telebot.types.KeyboardButton('Перевести')
     btn3 = telebot.types.KeyboardButton('История')
@@ -202,7 +201,6 @@ def total_balance(message):
     bot.send_message(message.chat.id, text, reply_markup=markup)
 
 
-# тут мы создадим простейший конечный автомат для обработки диалога с отправкой транзакции
 states_list = ["ADDRESS", "AMOUNT", "CONFIRM"]
 states_of_users = {}
 
@@ -214,7 +212,6 @@ def start_transaction(message):
     markup.add(btn1)
     text = f'Введите адрес кошелька куда хотите перевести: '
     bot.send_message(message.chat.id, text, reply_markup=markup)
-    # тут мы даём юзеру состояние при котором ему будет возвращаться следующее сообщение
     states_of_users[message.from_user.id] = {"STATE":"ADDRESS"}
 
 
@@ -228,7 +225,6 @@ def get_amount_of_transaction(message):
     markup.add(btn1)
     text = f'Введите сумму в сатоши, которую хотите перевести: '
     bot.send_message(message.chat.id, text, reply_markup=markup)
-    # тут мы даём юзеру состояние при котором ему будет возвращаться следующее сообщение
     states_of_users[message.from_user.id]["STATE"] = "AMOUNT"
     states_of_users[message.from_user.id]["ADDRESS"] = message.text
 
@@ -247,7 +243,6 @@ def get_confirmation_of_transaction(message):
         confirm = telebot.types.KeyboardButton('Подтверждаю')
         markup.add(confirm)
         bot.send_message(message.chat.id, text, reply_markup=markup)
-        # тут мы даём юзеру состояние при котором ему будет возвращаться следующее сообщение
         states_of_users[message.from_user.id]["STATE"] = "CONFIRM"
         states_of_users[message.from_user.id]["AMOUNT"] = int(message.text)
     else:
