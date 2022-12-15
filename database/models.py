@@ -37,5 +37,3 @@ class Wallet(db.Entity):
     address = Required(str, unique=True)
     sended_transactions = Set(Transaction, reverse='sender_wallet')
     received_transactions = Set(Transaction, reverse='receiver_wallet')
-
-
