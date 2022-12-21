@@ -3,6 +3,8 @@ from pony.orm import *
 
 db = Database()
 
+# 3 модели
+# пользователь имеет кошелек и также к нему привязан список выполненных транзакций
 
 class User(db.Entity):
     id = PrimaryKey(int, auto=True)
@@ -32,7 +34,7 @@ class Transaction(db.Entity):
 class Wallet(db.Entity):
     id = PrimaryKey(int, auto=True)
     user = Optional(User)
-    balance = Required(float, default="0.0")
+    balance = Required(float, default='0.0')
     private_key = Required(str, unique=True)
     address = Required(str, unique=True)
     sended_transactions = Set(Transaction, reverse='sender_wallet')
