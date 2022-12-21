@@ -55,4 +55,26 @@ class TransactionToCreate(pydantic.BaseModel):
     amount_btc_without_fee: float
 
 
+class Token(pydantic.BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(pydantic.BaseModel):
+    username: str | None = None
+
+
+class Admin(pydantic.BaseModel):
+    username: str
+
+
+class UserInDB(Admin):
+    hashed_password: str
+
+
+User.update_forward_refs()
 UserToUpdate.update_forward_refs()
+UserToCreate.update_forward_refs()
+Transaction.update_forward_refs()
+TransactionToCreate.update_forward_refs()
+Wallet.update_forward_refs()
