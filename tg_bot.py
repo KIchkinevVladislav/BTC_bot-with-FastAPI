@@ -5,7 +5,6 @@ import config
 import client
 from database import crud
 
-
 bot = telebot.TeleBot(config.BOT_TOKEN)
 
 page = 1 # переменная используется при пагинации
