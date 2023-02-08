@@ -111,7 +111,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         data={'sub': user.username})
     return {'access_token': access_token, 'token_type': 'bearer'}
 
-
 """
 current_user: Admin = Depends(get_current_user)
 используем в обработчиках пути 
