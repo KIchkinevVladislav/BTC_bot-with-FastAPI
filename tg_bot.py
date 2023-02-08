@@ -9,7 +9,6 @@ bot = telebot.TeleBot(config.BOT_TOKEN)
 
 page = 1 # переменная используется при пагинации
 
-
 @bot.message_handler(commands=['start'])
 def start_message(message):
     """
