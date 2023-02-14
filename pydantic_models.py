@@ -1,6 +1,7 @@
 import pydantic
 from datetime import datetime
 
+
 class User(pydantic.BaseModel):
     id: int
     tg_ID:  int
