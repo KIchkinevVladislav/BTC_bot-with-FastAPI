@@ -2,7 +2,6 @@ import requests
 import pydantic_models
 from config import API_URL
 
-
 # создаем заголовок в котором указываем, что тип контента - форма
 form_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
