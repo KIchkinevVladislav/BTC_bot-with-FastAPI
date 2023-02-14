@@ -8,6 +8,7 @@ from passlib.context import CryptContext
 import config
 from pydantic_models import Token, TokenData, Admin, UserInDB
 
+
 api = fastapi.FastAPI()
 
 SECRET_KEY = config.SECRET_KEY
