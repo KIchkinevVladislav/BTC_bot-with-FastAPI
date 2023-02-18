@@ -363,3 +363,5 @@ if __name__ == '__main__':
                 crud.create_user(444)
 
     bot.infinity_polling()  # запускаем бот
+
+    
