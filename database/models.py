@@ -6,6 +6,7 @@ db = Database()
 # 3 модели
 # пользователь имеет кошелек и также к нему привязан список выполненных транзакций
 
+
 class User(db.Entity):
     id = PrimaryKey(int, auto=True)
     tg_ID = Required(int, unique=True, size=64)
