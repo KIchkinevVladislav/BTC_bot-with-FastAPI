@@ -17,6 +17,7 @@ sesh.headers = {
   'Authorization': "Bearer " + token['access_token']
 }
 
+
 def create_user(user: pydantic_models.UserToCreate):
     """
     Создаем Юзера
