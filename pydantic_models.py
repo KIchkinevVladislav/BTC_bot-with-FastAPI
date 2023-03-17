@@ -70,7 +70,6 @@ class Admin(pydantic.BaseModel):
 class UserInDB(Admin):
     hashed_password: str
 
-
 User.update_forward_refs()
 UserToUpdate.update_forward_refs()
 UserToCreate.update_forward_refs()
