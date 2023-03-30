@@ -5,7 +5,7 @@ from config import API_URL
 # создаем заголовок в котором указываем, что тип контента - форма
 form_headers = {'Content-Type': 'application/x-www-form-urlencoded'}
 
-payload = 'username=admin&password=admin' # здесь наш логин и пароль
+payload = 'username=admin&password=admin' # здесь логин и пароль
 raw_token = requests.post(API_URL+'/token',
                          headers=form_headers,
                          data=payload)
