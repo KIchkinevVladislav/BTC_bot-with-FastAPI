@@ -4,6 +4,7 @@ import pydantic_models
 from database.db import *
 import config
 
+
 @db_session
 def create_wallet(
         user: pydantic_models.User = None,
