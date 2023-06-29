@@ -141,3 +141,4 @@ def get_user_transactions(user_id):
     except ValueError as E:
         return f'{responce.text} \n' \
                f'Exception: {E.args, E.__traceback__}'
+
