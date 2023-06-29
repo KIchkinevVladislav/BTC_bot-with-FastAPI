@@ -288,3 +288,4 @@ def get_user_wallet(
     :return:
     """
     return crud.get_wallet_info(crud.User[user_id].wallet)
+
