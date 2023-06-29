@@ -68,6 +68,7 @@ class TokenData(pydantic.BaseModel):
 class Admin(pydantic.BaseModel):
     username: str
 
+
 class UserInDB(Admin):
     hashed_password: str
 
