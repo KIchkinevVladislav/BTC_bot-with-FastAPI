@@ -1,5 +1,6 @@
 import requests
 import pydantic_models
+
 from config import API_URL
 
 # создаем заголовок в котором указываем, что тип контента - форма
