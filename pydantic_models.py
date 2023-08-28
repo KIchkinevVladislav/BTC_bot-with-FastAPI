@@ -1,7 +1,6 @@
 import pydantic
 from datetime import datetime
 
-#валидация моделей
 
 class User(pydantic.BaseModel):
     id: int
