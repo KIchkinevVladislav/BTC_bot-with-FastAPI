@@ -33,7 +33,8 @@
 
 Создаем и запускаем локальное окружение:
 
-python -m venv ENV 
+python -m venv env
+ 
 source env/Scripts/activate
 
 Установите зависимости из requirements.txt:
